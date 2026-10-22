@@ -116,7 +116,7 @@ after="7","192000.0"
 PASS: count and sum preserved
 ```
 
-- 시간은 down 시작부터 up 이후 SELECT 1 성공까지 측정했다. 교재의 89초는 이 환경의 측정값이 아니다.
+- 시간은 down 시작부터 up 이후 SELECT 1 성공까지 측정했다.
 - `minio-data:/data`에 데이터 파일, `rest-catalog:/home/iceberg`에 SQLite 카탈로그가 남는다. `CATALOG_URI`는 `jdbc:sqlite:file:/home/iceberg/iceberg_catalog.db`다.
 - `docker compose down`에 `-v`를 붙이지 않는다. `-v`는 named volume까지 삭제한다. [Docker 공식 문서](https://docs.docker.com/reference/cli/docker/compose/down/)
 - 이는 기존 볼륨을 유지한 재시작 검증이다. 새 PC에서 clone 후 up만 실행한다고 7행이 생기는 것은 아니다. 최초 버킷·테이블 생성 및 데이터 적재 절차가 추가로 필요하며, 기존 볼륨 데이터는 이 저장소에 포함하지 않는다.
