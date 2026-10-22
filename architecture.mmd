@@ -1,0 +1,16 @@
+flowchart TB
+    spark["Spark<br/>적재·변환·ALTER·UPDATE<br/>카탈로그 별칭: demo"]
+    trino["Trino<br/>조회·집계·INSERT<br/>8080 / 카탈로그 별칭: iceberg"]
+    catalog["REST 카탈로그<br/>8181<br/>테이블 식별자 → 최신 메타데이터 위치"]
+    subgraph minio["MinIO — S3 API: 9000 / 콘솔: 9001"]
+        raw[("raw 버킷<br/>원천 CSV")]
+        subgraph warehouse["warehouse 버킷"]
+            iceberg["Iceberg 테이블: lakehouse.orders<br/>데이터 파일·메타데이터·스냅샷"]
+        end
+    end
+    spark -->|"1. 원천 CSV 읽기"| raw
+    spark -->|"2. 테이블 메타데이터 확인"| catalog
+    spark -->|"3. 데이터·메타데이터 쓰기"| iceberg
+    spark -->|"4. 커밋: 최신 메타데이터 등록"| catalog
+    trino -->|"5. 최신 메타데이터 위치 확인"| catalog
+    trino -->|"6. 메타데이터·데이터 읽기"| iceberg

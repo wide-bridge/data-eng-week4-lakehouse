@@ -1,0 +1,80 @@
+services:
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z  # 4-1 의 latest 와 같은 판 — 태그만 고정
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in .env}
+      MINIO_DOMAIN: minio
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio-data:/data
+    networks:
+      default:
+        aliases:
+          - warehouse.minio
+
+  mc:
+    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    container_name: mc
+    depends_on:
+      - minio
+    environment:
+      MC_HOST_local: http://${MINIO_ROOT_USER}:${MINIO_ROOT_PASSWORD}@minio:9000
+    entrypoint: ["/bin/sh", "-c", "sleep infinity"]
+    volumes:
+      - ./data:/data
+
+  rest:
+    image: tabulario/iceberg-rest:1.6.0
+    container_name: iceberg-rest
+    depends_on:
+      - minio
+    ports:
+      - "8181:8181"
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+      CATALOG_WAREHOUSE: s3://warehouse/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://minio:9000
+      CATALOG_URI: jdbc:sqlite:file:/home/iceberg/iceberg_catalog.db  # 카탈로그를 볼륨의 파일에 — 빼면 down 때 테이블 목록이 사라집니다
+    volumes:
+      - rest-catalog:/home/iceberg
+
+  spark-iceberg:
+    image: tabulario/spark-iceberg:3.5.5_1.8.1
+    container_name: spark-iceberg
+    depends_on:
+      - rest
+      - minio
+    ports:
+      - "8888:8888"
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_REGION: us-east-1
+    volumes:
+      - ./scripts:/home/iceberg/scripts
+
+  trino:
+    image: trinodb/trino:483
+    container_name: trino
+    environment:
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+    depends_on:
+      - rest
+      - minio
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./catalog:/etc/trino/catalog
+
+volumes:
+  minio-data:
+  rest-catalog:

@@ -1,0 +1,8 @@
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.sql text eol=lf
+*.yml text eol=lf
+*.properties text eol=lf
+*.md text eol=lf
+*.mmd text eol=lf
