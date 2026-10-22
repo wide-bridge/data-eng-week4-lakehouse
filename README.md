@@ -93,8 +93,6 @@ WHERE memo IS NOT NULL;
 - 이미 존재하는 ID 8을 다시 INSERT하려는 시도가 있었다. 재적재 시 중복을 방지하도록 키 기준 MERGE와 재실행 검증을 추가한다.
 - 현재 ETL은 raw/orders/ 전체를 읽는다. 날짜별 증분 읽기를 검토한다.
 
-기록 기준: 2026-10-22에 제공된 실습 로그와 실제 환경 검토. 데이터는 실습 중 변경됐으므로 과거 6행 결과와 이후 7행 결과를 동시점 불일치로 해석하지 않는다.
-
 ## 7. 제출 전 재현 확인
 
 제출 파일은 실제 환경에서 복사한 뒤 계정값을 환경변수로 분리한 `docker-compose.yml`, `catalog/iceberg.properties`, `scripts/` 세 파일과 이 문서의 Mermaid 다이어그램이다. 추가로 `trino_checks.sql`과 `verify_restart.sh`를 제공한다.
